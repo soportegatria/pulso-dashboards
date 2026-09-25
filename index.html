@@ -1,0 +1,1403 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="refresh" content="1800">
+<title>Pulso BWS</title>
+<meta name="description" content="Recepción diaria de medidores por proyecto — Gatria BWS Monitor">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    /* fixed BWS status/brand colors -- identical in both themes, on purpose:
+       a green tile means the same thing everywhere. */
+    --brand-fixed:    #376598;
+    --good:           #008645;
+    --warning:        #e6a800;
+    --critical:       #e60000;
+    --muted-tile:     #4b5560;
+
+    --bg-page:      #eef2f6;
+    --surface:      #ffffff;
+    --surface-2:    #eef1f4;
+    --text-primary: #0b0f14;
+    --text-secondary: #4d5560;
+    --text-muted:   #7c8590;
+    --border:       rgba(11,15,20,0.10);
+    --border-strong:rgba(11,15,20,0.18);
+    --brand:        var(--brand-fixed);
+    --accent:       #0073b7;
+    --accent-wash:  #e3f1fa;
+    --good-wash:    #e1f5ea;
+    --good-ink:     #008645;
+    --warning-wash: #fdf1d6;
+    --warning-ink:  #8a6300;
+    --critical-wash:#fbe4e4;
+    --critical-ink: #c62828;
+    --muted-chip:   #eceae3;
+    --muted-chip-ink: #5c6b7a;
+    --shadow: 0 1px 2px rgba(11,15,20,0.04), 0 8px 24px -12px rgba(11,15,20,0.12);
+    --tile-shadow: 0 2px 4px rgba(11,15,20,0.06), 0 10px 26px -12px rgba(11,15,20,0.22);
+  }
+  /* Diseño de un solo tema (claro), a propósito -- alineado con BWS Server,
+     que tampoco tiene modo oscuro. */
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+  }
+
+  header.top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+  .brand-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .brand-logo-wrap {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 6px 10px;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    flex: none;
+  }
+  .brand-logo { height: 30px; width: auto; display: block; }
+  .brand-eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brand);
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  .meta-right {
+    text-align: right;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .meta-right b { color: var(--text-primary); font-weight: 600; }
+
+  /* Hero: recepción global (todos los proyectos, todos los edificios) */
+  .hero-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .hero-main { display: flex; flex-direction: column; gap: 6px; min-width: 240px; }
+  .hero-value-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .hero-value {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 48px;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .hero-delta {
+    font-size: 12.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+  }
+  .hero-delta.up   { color: var(--good-ink); }
+  .hero-delta.down { color: var(--critical-ink); }
+  .hero-delta.flat { color: var(--text-muted); }
+  .hero-sub { font-size: 13px; color: var(--text-secondary); }
+  .hero-meter-wrap { flex: 1; min-width: 220px; max-width: 420px; display: flex; flex-direction: column; gap: 6px; }
+  .hero-meter-track { height: 10px; border-radius: 999px; overflow: hidden; background: var(--surface-2); }
+  .hero-meter-fill { height: 100%; border-radius: 999px; }
+  .hero-meter-caption { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
+
+  /* KPI strip */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 220px));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .kpi {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: var(--tile-shadow);
+    color: #ffffff;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .kpi {
+    --tile-ink: #ffffff;
+    --tile-ink-soft: rgba(255,255,255,0.85);
+    --tile-ghost: rgba(255,255,255,0.18);
+  }
+  .kpi .n {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1;
+    font-family: "IBM Plex Mono", monospace;
+    color: var(--tile-ink);
+  }
+  .kpi .label {
+    font-size: 11.5px;
+    color: var(--tile-ink-soft);
+  }
+  .kpi.good { background: var(--good); }
+  .kpi.warning { background: var(--warning); }
+  .kpi.critical { background: var(--critical); }
+  .kpi.muted { background: var(--muted-tile); }
+  .kpi.warning {
+    --tile-ink: #241c00;
+    --tile-ink-soft: rgba(36,28,0,0.75);
+    --tile-ghost: rgba(0,0,0,0.14);
+  }
+  .kpi .ghost-icon {
+    position: absolute;
+    right: -8px;
+    bottom: -8px;
+    width: 40px;
+    height: 40px;
+    color: var(--tile-ghost);
+    pointer-events: none;
+  }
+
+  section h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin: 0 0 14px;
+  }
+
+  /* Project grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 14px;
+    margin-bottom: 40px;
+  }
+  .card {
+    /* tinta por defecto: clara, para fondos saturados (verde/rojo/gris) */
+    --tile-ink:        #ffffff;
+    --tile-ink-soft:   rgba(255,255,255,0.8);
+    --tile-ink-softer: rgba(255,255,255,0.7);
+    --tile-chip-bg:    rgba(255,255,255,0.22);
+    --tile-chip-border:rgba(255,255,255,0.4);
+    --tile-note-bg:    rgba(0,0,0,0.16);
+    --tile-note-border:rgba(255,255,255,0.16);
+    --tile-ghost:      rgba(255,255,255,0.16);
+    --tile-spark:      rgba(255,255,255,0.9);
+    --tile-spark-track:rgba(255,255,255,0.35);
+
+    border-radius: 12px;
+    padding: 18px 18px 16px;
+    box-shadow: var(--tile-shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    color: var(--tile-ink);
+  }
+  .card.state-good     { background: var(--good); }
+  .card.state-warning   { background: var(--warning); }
+  .card.state-critical { background: var(--critical); }
+  .card.state-muted     { background: var(--muted-tile); }
+
+  /* amarillo: fondo claro, se invierte a tinta oscura para contraste */
+  .card.state-warning {
+    --tile-ink:        #241c00;
+    --tile-ink-soft:   rgba(36,28,0,0.75);
+    --tile-ink-softer: rgba(36,28,0,0.65);
+    --tile-chip-bg:    rgba(0,0,0,0.12);
+    --tile-chip-border:rgba(0,0,0,0.28);
+    --tile-note-bg:    rgba(255,255,255,0.4);
+    --tile-note-border:rgba(0,0,0,0.14);
+    --tile-ghost:      rgba(0,0,0,0.14);
+    --tile-spark:      rgba(36,28,0,0.85);
+    --tile-spark-track:rgba(0,0,0,0.25);
+  }
+
+  .card .ghost-icon {
+    position: absolute;
+    right: -14px;
+    bottom: -14px;
+    width: 92px;
+    height: 92px;
+    color: var(--tile-ghost);
+    pointer-events: none;
+  }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    position: relative;
+    z-index: 1;
+  }
+  .proj-name {
+    font-size: 15.5px;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+  .db-name {
+    font-size: 11px;
+    color: var(--tile-ink-softer);
+    margin-top: 2px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+  }
+  .chip svg { width: 8px; height: 8px; flex: none; }
+  /* on-tile chip: translucent pill, used inside colored cards */
+  .chip.on-tile {
+    background: var(--tile-chip-bg);
+    border: 1px solid var(--tile-chip-border);
+    color: var(--tile-ink);
+  }
+  /* on-surface chip: used in the plain-background detail table */
+  .chip.on-surface.good     { background: var(--good-wash); color: var(--good-ink); }
+  .chip.on-surface.warning  { background: var(--warning-wash); color: var(--warning-ink); }
+  .chip.on-surface.critical { background: var(--critical-wash); color: var(--critical-ink); }
+  .chip.on-surface.muted-c  { background: var(--muted-chip); color: var(--muted-chip-ink); }
+
+  .pct-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+  }
+  .pct {
+    font-size: 36px;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .pct-frac {
+    font-size: 13px;
+    color: var(--tile-ink-soft);
+  }
+
+  .spark-wrap { height: 34px; position: relative; z-index: 1; }
+  .spark-empty {
+    font-size: 11.5px;
+    color: var(--tile-ink-soft);
+    padding-top: 8px;
+    position: relative;
+    z-index: 1;
+  }
+  .spark-dates {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 4px;
+    position: relative;
+    z-index: 1;
+  }
+  .spark-point {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1.2;
+  }
+  .spark-point.end { align-items: flex-end; }
+  .spark-point .p {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--tile-ink);
+  }
+  .spark-point .d {
+    font-size: 10px;
+    color: var(--tile-ink-soft);
+  }
+
+  .card-note {
+    font-size: 12px;
+    color: var(--tile-ink);
+    background: var(--tile-note-bg);
+    border: 1px solid var(--tile-note-border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    line-height: 1.45;
+    position: relative;
+    z-index: 1;
+  }
+
+  .card-footer {
+    font-size: 11px;
+    color: var(--tile-ink-softer);
+    margin-top: auto;
+    padding-top: 4px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 600;
+    background: var(--surface-2);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface-2); }
+  td.num { text-align: right; }
+
+  .section-hint {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0 0 14px;
+    max-width: 68ch;
+  }
+
+  .zero-list, .evento-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 40px;
+  }
+  .evento-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--warning);
+    border-radius: 10px;
+    padding: 12px 16px;
+  }
+  .evento-item.sev-critical { border-left-color: var(--critical); }
+  .evento-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  .evento-proyecto { font-size: 14px; font-weight: 700; }
+  .evento-rango { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+  .evento-resumen { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0; }
+  .zero-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .zero-item summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    list-style: none;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .zero-item summary::-webkit-details-marker { display: none; }
+  .zero-item-flat-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .zero-item-name { display: flex; align-items: center; gap: 10px; }
+  .zero-item-right { display: flex; align-items: center; gap: 10px; flex: none; }
+  .zero-count-badge {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .zero-count-badge.some { background: var(--warning-wash); color: var(--warning-ink); }
+  .zero-count-badge.none { background: var(--surface-2); color: var(--text-muted); }
+  .zero-chevron {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    color: var(--text-muted);
+    transition: transform 0.15s ease;
+  }
+  .zero-item.expandible[open] .zero-chevron { transform: rotate(180deg); }
+  .zero-item .table-scroll { border: none; border-top: 1px solid var(--border); border-radius: 0; }
+  .zero-item table th { background: var(--surface-2); }
+
+  details.methodology {
+    margin-top: 28px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 4px 18px;
+  }
+  details.methodology summary {
+    cursor: pointer;
+    padding: 12px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    list-style: none;
+  }
+  details.methodology summary::-webkit-details-marker { display: none; }
+  details.methodology summary::before {
+    content: "→";
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.15s ease;
+    color: var(--accent);
+  }
+  details.methodology[open] summary::before { transform: rotate(90deg); }
+  details.methodology p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+  details.methodology code {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    background: var(--surface-2);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  footer.page-footer {
+    margin-top: 36px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand-row">
+      <span class="brand-logo-wrap">
+        <img class="brand-logo" alt="BWS Server" src="data:image/png;base64,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">
+      </span>
+      <div>
+        <p class="brand-eyebrow">Gatria &middot; BWS Server</p>
+        <h1>Pulso BWS</h1>
+      </div>
+    </div>
+    <div class="meta-right">
+      Última lectura: <b id="meta-last-check">—</b><br>
+      Actualización recomendada: <b>lunes 8:00&nbsp;AM</b> — pídele a Claude &ldquo;actualiza el dashboard&rdquo;
+    </div>
+  </header>
+
+  <section>
+    <h2>Recepción global de telemedida</h2>
+    <div class="hero-card" id="hero-global"></div>
+  </section>
+
+  <div class="kpis" id="kpi-strip"></div>
+
+  <section>
+    <h2>Recepción por proyecto (hoy)</h2>
+    <div class="grid" id="project-grid"></div>
+  </section>
+
+  <section>
+    <h2>Detalle</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Proyecto</th>
+            <th>Base de datos</th>
+            <th class="num">Total medidores</th>
+            <th class="num">Reportaron</th>
+            <th class="num">%</th>
+            <th>Estado</th>
+            <th>Medido</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Eventos relevantes</h2>
+    <p class="section-hint">
+      Incidentes reales de caída y recuperación detectados en las últimas 3 semanas, calculados
+      consultando directamente las tablas de lecturas por día en la RDS (no dependen de que el
+      cron haya corrido ese día). Se marca un evento cuando un proyecto cambia de franja de color
+      de un día a otro (verde ≥97%, amarillo 50–97%, rojo &lt;50%).
+    </p>
+    <div class="evento-list" id="evento-list"></div>
+  </section>
+
+  <section>
+    <h2>Lecturas con valor 0</h2>
+    <p class="section-hint">
+      Medidor creado en base de datos y reportando hoy, pero su última lectura de
+      <b>Energia Activa RED</b> vino en 0 — puede estar desconectado, cambiado por uno sin
+      telemedida, u otro factor externo. Haz clic en un proyecto para ver el detalle.
+    </p>
+    <div class="zero-list" id="zero-list"></div>
+  </section>
+
+  <details class="methodology">
+    <summary>Cómo se calcula el % de recepción</summary>
+    <p>
+      Cada proyecto es una base de datos separada (<code>electricaribe_200X</code>) en la misma RDS.
+      La tabla <code>device</code> tiene el maestro de medidores; las lecturas viven en una tabla por
+      día, <code>datafield_YYYY_MM_DD</code>. El identificador de medidor en <code>device</code> es un
+      índice global, pero en <code>datafield</code> es un índice local dentro de cada nodo — el % se
+      calcula reconstruyendo ese índice local con <code>ROW_NUMBER() OVER (PARTITION BY "Nodo_ID" ORDER BY "Device_ID")</code>
+      y cruzando contra la tabla del día. Un pipeline en el bastion EC2 corre esta consulta a las
+      11:50&nbsp;PM y 7:00&nbsp;AM (hora Bogotá) contra las 9 bases, guarda cada lectura en una serie de
+      tiempo local, y envía alarma por correo si un proyecto no silenciado cae bajo 90%.
+      Los medidores en 0 (abajo) se identifican tomando la lectura más reciente del día del campo
+      <code>Energia Activa RED</code> por medidor.
+    </p>
+  </details>
+
+  <footer class="page-footer">
+    <span>9 proyectos monitoreados · datos de solo lectura desde RDS de producción</span>
+    <span id="meta-generated"></span>
+  </footer>
+
+</div>
+
+<script>
+  // ===DATA_START===
+  const LECTURAS = [
+  {
+    "db": "electricaribe_2001",
+    "proyecto": "Spiaggia",
+    "total": 139,
+    "reportaron": 139,
+    "pct": 100.0,
+    "checked_at": "2026-09-25T07:00:01",
+    "silenciado": false
+  },
+  {
+    "db": "electricaribe_2002",
+    "proyecto": "Newport",
+    "total": 243,
+    "reportaron": 243,
+    "pct": 100.0,
+    "checked_at": "2026-09-25T07:00:01",
+    "silenciado": false
+  },
+  {
+    "db": "electricaribe_2003",
+    "proyecto": "Sagitario",
+    "total": 169,
+    "reportaron": 169,
+    "pct": 100.0,
+    "checked_at": "2026-09-25T07:00:01",
+    "silenciado": false
+  },
+  {
+    "db": "electricaribe_2004",
+    "proyecto": "Newport II",
+    "total": 180,
+    "reportaron": 0,
+    "pct": 0.0,
+    "checked_at": "2026-09-25T07:00:01",
+    "silenciado": true,
+    "nota": "Caída sin resolver desde 2025-08-28. Último día completo: 2025-08-14 (76.1%). En análisis."
+  },
+  {
+    "db": "electricaribe_2005",
+    "proyecto": "Acuarela",
+    "total": 50,
+    "reportaron": 50,
+    "pct": 100.0,
+    "checked_at": "2026-09-25T07:00:01",
+    "silenciado": false
+  },
+  {
+    "db": "electricaribe_2006",
+    "proyecto": "Dominique",
+    "total": 123,
+    "reportaron": 82,
+    "pct": 66.7,
+    "checked_at": "2026-09-25T07:00:01",
+    "silenciado": false
+  },
+  {
+    "db": "electricaribe_2007",
+    "proyecto": "Newport III",
+    "total": 242,
+    "reportaron": 0,
+    "pct": 0.0,
+    "checked_at": "2026-09-25T07:00:01",
+    "silenciado": true,
+    "nota": "Telemedida desmontada desde 2025-04-10. Normalización prevista semana 2026-09-14 aún no reflejada."
+  },
+  {
+    "db": "electricaribe_2008",
+    "proyecto": "Puerto Velero",
+    "total": 79,
+    "reportaron": 79,
+    "pct": 100.0,
+    "checked_at": "2026-09-25T07:00:01",
+    "silenciado": false
+  },
+  {
+    "db": "electricaribe_2009",
+    "proyecto": "Laguna del Cabrero",
+    "total": 117,
+    "reportaron": 108,
+    "pct": 92.3,
+    "checked_at": "2026-09-25T07:00:01",
+    "silenciado": false
+  }
+];
+
+  const CEROS = {
+  "electricaribe_2001": [
+    {
+      "ubicacion": "Apt- 1009",
+      "serial": "18111175",
+      "valor": 0.0
+    },
+    {
+      "ubicacion": "Apt- 1103",
+      "serial": "18111157",
+      "valor": 0.0
+    },
+    {
+      "ubicacion": "Apt- 1104",
+      "serial": "18111128",
+      "valor": 0.0
+    },
+    {
+      "ubicacion": "Apt- 1201",
+      "serial": "18111131",
+      "valor": 0.0
+    }
+  ],
+  "electricaribe_2002": [
+    {
+      "ubicacion": "Apt_2907",
+      "serial": "19048399",
+      "valor": 0.0
+    },
+    {
+      "ubicacion": "Apt_407",
+      "serial": "19048199",
+      "valor": 0.0
+    },
+    {
+      "ubicacion": "Zonas_Comunes",
+      "serial": "10007133",
+      "valor": 0.0
+    }
+  ],
+  "electricaribe_2003": [
+    {
+      "ubicacion": "P23Apto2",
+      "serial": "19048160",
+      "valor": 0.0
+    }
+  ],
+  "electricaribe_2004": [],
+  "electricaribe_2005": [
+    {
+      "ubicacion": "APT_0801",
+      "serial": "21098001",
+      "valor": 0.0
+    },
+    {
+      "ubicacion": "APT_1802",
+      "serial": "21098026",
+      "valor": 0.0
+    }
+  ],
+  "electricaribe_2006": [
+    {
+      "ubicacion": "Apto_1007",
+      "serial": "22111539",
+      "valor": 0.0
+    },
+    {
+      "ubicacion": "Apto_1404",
+      "serial": "22111563",
+      "valor": 0.0
+    },
+    {
+      "ubicacion": "Apto_410",
+      "serial": "21111007",
+      "valor": 0.0
+    },
+    {
+      "ubicacion": "Apto_707",
+      "serial": "22111530",
+      "valor": 0.0
+    }
+  ],
+  "electricaribe_2007": [],
+  "electricaribe_2008": [
+    {
+      "ubicacion": "Torre B",
+      "serial": "22111649",
+      "valor": 0.0
+    }
+  ],
+  "electricaribe_2009": []
+};
+
+  const UMBRAL = 90.0;
+  const GENERATED_AT = "2026-09-25T12:29:51";
+
+  const EVENTOS = [
+  {
+    "proyecto": "Laguna del Cabrero",
+    "db": "electricaribe_2009",
+    "inicio": "2026-09-23",
+    "fin": "2026-09-23",
+    "minPct": 91.5,
+    "resumen": "Pasó de verde a amarillo (91.5%) el 2026-09-23 (detectado automáticamente)."
+  },
+  {
+    "proyecto": "Laguna del Cabrero",
+    "db": "electricaribe_2009",
+    "inicio": "2026-09-21",
+    "fin": "2026-09-21",
+    "minPct": 97.4,
+    "resumen": "Pasó de amarillo a verde (97.4%) el 2026-09-21 (detectado automáticamente)."
+  }
+];
+
+  const HISTORIAL = {
+  "electricaribe_2001": [
+    {
+      "t": "2026-09-11T15:29:23",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-14T16:03:23",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-21T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-22T23:50:02",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-23T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-24T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-25T07:00:01",
+      "pct": 100.0
+    }
+  ],
+  "electricaribe_2002": [
+    {
+      "t": "2026-09-11T15:29:23",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-14T16:03:23",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-21T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-22T23:50:02",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-23T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-24T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-25T07:00:01",
+      "pct": 100.0
+    }
+  ],
+  "electricaribe_2003": [
+    {
+      "t": "2026-09-11T15:29:23",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-14T16:03:23",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-21T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-22T23:50:02",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-23T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-24T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-25T07:00:01",
+      "pct": 100.0
+    }
+  ],
+  "electricaribe_2004": [
+    {
+      "t": "2026-09-11T15:29:23",
+      "pct": 8.9
+    },
+    {
+      "t": "2026-09-14T16:03:23",
+      "pct": 10.0
+    },
+    {
+      "t": "2026-09-21T23:50:01",
+      "pct": 14.4
+    },
+    {
+      "t": "2026-09-22T23:50:02",
+      "pct": 16.7
+    },
+    {
+      "t": "2026-09-23T23:50:01",
+      "pct": 15.0
+    },
+    {
+      "t": "2026-09-24T23:50:01",
+      "pct": 14.4
+    },
+    {
+      "t": "2026-09-25T07:00:01",
+      "pct": 0.0
+    }
+  ],
+  "electricaribe_2005": [
+    {
+      "t": "2026-09-11T15:29:23",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-14T16:03:23",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-21T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-22T23:50:02",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-23T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-24T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-25T07:00:01",
+      "pct": 100.0
+    }
+  ],
+  "electricaribe_2006": [
+    {
+      "t": "2026-09-11T15:29:23",
+      "pct": 73.2
+    },
+    {
+      "t": "2026-09-14T16:03:23",
+      "pct": 63.4
+    },
+    {
+      "t": "2026-09-21T23:50:01",
+      "pct": 81.3
+    },
+    {
+      "t": "2026-09-22T23:50:02",
+      "pct": 87.0
+    },
+    {
+      "t": "2026-09-23T23:50:01",
+      "pct": 87.0
+    },
+    {
+      "t": "2026-09-24T23:50:01",
+      "pct": 86.2
+    },
+    {
+      "t": "2026-09-25T07:00:01",
+      "pct": 66.7
+    }
+  ],
+  "electricaribe_2007": [
+    {
+      "t": "2026-09-11T15:29:23",
+      "pct": 0.0
+    },
+    {
+      "t": "2026-09-14T16:03:23",
+      "pct": 0.0
+    },
+    {
+      "t": "2026-09-21T23:50:01",
+      "pct": 0.0
+    },
+    {
+      "t": "2026-09-22T23:50:02",
+      "pct": 0.0
+    },
+    {
+      "t": "2026-09-23T23:50:01",
+      "pct": 0.0
+    },
+    {
+      "t": "2026-09-24T23:50:01",
+      "pct": 0.0
+    },
+    {
+      "t": "2026-09-25T07:00:01",
+      "pct": 0.0
+    }
+  ],
+  "electricaribe_2008": [
+    {
+      "t": "2026-09-11T15:29:23",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-14T16:03:23",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-21T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-22T23:50:02",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-23T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-24T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-09-25T07:00:01",
+      "pct": 100.0
+    }
+  ],
+  "electricaribe_2009": [
+    {
+      "t": "2026-09-11T15:29:23",
+      "pct": 97.4
+    },
+    {
+      "t": "2026-09-14T16:03:23",
+      "pct": 97.4
+    },
+    {
+      "t": "2026-09-21T23:50:01",
+      "pct": 97.4
+    },
+    {
+      "t": "2026-09-22T23:50:02",
+      "pct": 97.4
+    },
+    {
+      "t": "2026-09-23T23:50:01",
+      "pct": 96.6
+    },
+    {
+      "t": "2026-09-24T23:50:01",
+      "pct": 96.6
+    },
+    {
+      "t": "2026-09-25T07:00:01",
+      "pct": 92.3
+    }
+  ]
+};
+// ===DATA_END===
+
+  // Compacta pares "iso,pct" en objetos {t, pct} -- usado por HISTORIAL para no
+  // repetir la clave "t"/"pct" en 21 puntos x 8 proyectos (function hoisted, se
+  // puede usar arriba en las consts).
+  function csvPt(s) {
+    const idx = s.lastIndexOf(",");
+    return { t: s.slice(0, idx), pct: parseFloat(s.slice(idx + 1)) };
+  }
+
+  function fmtFecha(iso) {
+    const d = new Date(iso);
+    return d.toLocaleString("es-CO", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  // Color visual por franjas (independiente del umbral de la alarma por correo,
+  // que sigue siendo UMBRAL=90% en config.py del bastion):
+  //   >=97%        verde   (good)
+  //   50% - <97%   amarillo (warning) -- bajo pero no tan critico
+  //   <50%         rojo    (critical)
+  //   silenciado   gris    (muted), sin importar el %
+  function estadoPorPct(pct) {
+    if (pct >= 97) return "good";
+    if (pct >= 50) return "warning";
+    return "critical";
+  }
+
+  function estadoDe(l) {
+    if (l.silenciado) return "muted";
+    return estadoPorPct(l.pct);
+  }
+
+  const ETIQUETA = { good: "OK", warning: "Atención", critical: "Alerta", muted: "Silenciado" };
+
+  function chipHTML(estado, variante) {
+    const label = ETIQUETA[estado];
+    const clase = variante === "surface" ? `on-surface ${estado === "muted" ? "muted-c" : estado}` : "on-tile";
+    return `<span class="chip ${clase}"><svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="currentColor"/></svg>${label}</span>`;
+  }
+
+  // icono "medidor/pulso" al estilo del icono de esquina de los tiles de BWS Server
+  const GHOST_ICON = `<svg class="ghost-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M3 13h3l2.2 6L13 4l2.8 9H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+
+  function fmtFechaCorta(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString("es-CO", { day: "2-digit", month: "short" });
+  }
+
+  function sparkSVG(puntos) {
+    const w = 220, h = 34, pad = 4;
+    const color = "var(--tile-spark)";
+    if (puntos.length < 2) {
+      const y = h / 2;
+      return `<svg class="spark-wrap" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="primer punto de historial">
+        <line x1="${pad}" y1="${y}" x2="${w - pad}" y2="${y}" stroke="var(--tile-spark-track)" stroke-dasharray="3 3" stroke-width="1"/>
+        <circle cx="${w - pad - 6}" cy="${y}" r="4" fill="${color}"/>
+      </svg>`;
+    }
+    const vals = puntos.map(p => p.pct);
+    // Escala relativa al rango real de valores (no fija 0-100) para que un cambio
+    // pequeño en puntos porcentuales (ej. 73.2% -> 63.4%) se vea como una pendiente
+    // real y no como una línea plana perdida en una escala de 100 puntos.
+    let min = Math.min(...vals), max = Math.max(...vals);
+    if (min === max) { min -= 1; max += 1; }
+    const xs = puntos.map((_, i) => pad + (i * (w - 2 * pad)) / (puntos.length - 1));
+    const ys = vals.map(v => h - pad - ((v - min) / (max - min)) * (h - 2 * pad));
+    const path = xs.map((x, i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(" ");
+    return `<svg class="spark-wrap" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="historial de recepcion">
+      <path d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="${xs[xs.length - 1]}" cy="${ys[ys.length - 1]}" r="3" fill="${color}"/>
+    </svg>`;
+  }
+
+  function sparkBlock(hist) {
+    if (hist.length < 2) {
+      return `<div class="spark-empty">Primera lectura registrada — el historial se construye con cada actualización</div>`;
+    }
+    const primero = hist[0], ultimo = hist[hist.length - 1];
+    return `${sparkSVG(hist)}<div class="spark-dates">
+      <div class="spark-point start"><span class="p tabular">${primero.pct.toFixed(1)}%</span><span class="d">${fmtFechaCorta(primero.t)}</span></div>
+      <div class="spark-point end"><span class="p tabular">${ultimo.pct.toFixed(1)}%</span><span class="d">${fmtFechaCorta(ultimo.t)}</span></div>
+    </div>`;
+  }
+
+  // Recepción global: todos los medidores de todos los proyectos juntos
+  // (incluye Newport II y Newport III, que solo están silenciados para la alarma
+  // por correo, no para esta cuenta global).
+  function renderHero() {
+    const totalDispositivos = LECTURAS.reduce((s, l) => s + l.total, 0);
+    const totalReportaron = LECTURAS.reduce((s, l) => s + l.reportaron, 0);
+    const pctGlobal = totalDispositivos ? (totalReportaron / totalDispositivos) * 100 : 0;
+    const estado = estadoPorPct(pctGlobal);
+
+    // Delta vs. el dia anterior: TODOS los proyectos se comparan contra la MISMA
+    // fecha de referencia (el dia calendario justo antes de GENERATED_AT), buscando
+    // esa fecha exacta en el HISTORIAL de cada uno por su "t" -- no el penultimo
+    // punto por posicion, que se desalineaba cuando un proyecto tiene menos puntos
+    // que los demas (ej. Newport III, sin serie diaria completa por falta de datos).
+    // Si un proyecto no tiene lectura para esa fecha exacta, se excluye del calculo
+    // (para ambos lados de la comparacion) y se lista aparte, en vez de comparar
+    // contra una fecha distinta en silencio.
+    let deltaHTML = "";
+    const fechaRef = new Date(GENERATED_AT.slice(0, 10) + "T12:00:00");
+    fechaRef.setDate(fechaRef.getDate() - 1);
+    const fechaRefISO = fechaRef.toISOString().slice(0, 10);
+
+    const conRef = LECTURAS
+      .map(l => {
+        const punto = (HISTORIAL[l.db] || []).find(p => p.t.slice(0, 10) === fechaRefISO);
+        return punto ? { l, prevPct: punto.pct } : null;
+      })
+      .filter(Boolean);
+
+    if (conRef.length > 0) {
+      const totalRef = conRef.reduce((s, { l }) => s + l.total, 0);
+      const reportaronHoyRef = conRef.reduce((s, { l }) => s + l.reportaron, 0);
+      const prevReportaron = conRef.reduce((s, { l, prevPct }) => s + Math.round((prevPct / 100) * l.total), 0);
+      const pctHoyRef = totalRef ? (reportaronHoyRef / totalRef) * 100 : 0;
+      const prevPctGlobal = totalRef ? (prevReportaron / totalRef) * 100 : 0;
+      const delta = pctHoyRef - prevPctGlobal;
+      const dir = Math.abs(delta) < 0.05 ? "flat" : delta > 0 ? "up" : "down";
+      const arrow = dir === "up" ? "▲" : dir === "down" ? "▼" : "—";
+      const fechaPrev = fmtFechaCorta(fechaRefISO + "T12:00:00");
+      deltaHTML = `<span class="hero-delta ${dir}">${arrow} ${Math.abs(delta).toFixed(1)}&nbsp;pts vs ${fechaPrev}</span>`;
+
+      const excluidos = LECTURAS.filter(l => !conRef.some(c => c.l.db === l.db)).map(l => l.proyecto);
+      if (excluidos.length) {
+        deltaHTML += ` <span class="hero-delta flat" title="Sin lectura registrada para ${fechaPrev} en su histórico">(${excluidos.join(", ")} sin dato ese día)</span>`;
+      }
+    }
+
+    document.getElementById("hero-global").innerHTML = `
+      <div class="hero-main">
+        <div class="hero-value-row">
+          <span class="hero-value" style="color:var(--${estado}-ink)">${pctGlobal.toFixed(1)}%</span>
+          ${chipHTML(estado, "surface")}
+          ${deltaHTML}
+        </div>
+        <div class="hero-sub">${totalReportaron.toLocaleString("es-CO")} / ${totalDispositivos.toLocaleString("es-CO")} medidores reportando hoy &middot; 9 proyectos, incluye los silenciados</div>
+      </div>
+      <div class="hero-meter-wrap">
+        <div class="hero-meter-track"><div class="hero-meter-fill" style="width:${Math.min(pctGlobal, 100).toFixed(1)}%; background:var(--${estado})"></div></div>
+        <div class="hero-meter-caption"><span>0%</span><span>100%</span></div>
+      </div>
+    `;
+  }
+
+  function fmtFechaCortaStr(fechaISO) {
+    // fechaISO viene como "YYYY-MM-DD" (sin hora) -- se ancla al mediodía para
+    // que el formateo en zona horaria local nunca cruce al día anterior.
+    return fmtFechaCorta(fechaISO + "T12:00:00");
+  }
+
+  function renderEventos() {
+    document.getElementById("evento-list").innerHTML = EVENTOS.map(e => {
+      const sev = e.minPct < 50 ? "critical" : "warning";
+      const rango = e.fin
+        ? `${fmtFechaCortaStr(e.inicio)} – ${fmtFechaCortaStr(e.fin)}`
+        : `desde ${fmtFechaCortaStr(e.inicio)}`;
+      return `
+        <div class="evento-item sev-${sev}">
+          <div class="evento-top">
+            <span class="evento-proyecto">${e.proyecto}</span>
+            <span class="evento-rango mono">${rango}</span>
+          </div>
+          <p class="evento-resumen">${e.resumen}</p>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function render() {
+    renderHero();
+    renderEventos();
+    const ordenado = [...LECTURAS].sort((a, b) => a.pct - b.pct);
+
+    document.getElementById("meta-last-check").textContent = fmtFecha(GENERATED_AT);
+    document.getElementById("meta-generated").textContent = "generado " + fmtFecha(GENERATED_AT);
+
+    const nOk = LECTURAS.filter(l => estadoDe(l) === "good").length;
+    const nAtencion = LECTURAS.filter(l => estadoDe(l) === "warning").length;
+    const nAlerta = LECTURAS.filter(l => estadoDe(l) === "critical").length;
+    const nSilenciado = LECTURAS.filter(l => estadoDe(l) === "muted").length;
+
+    document.getElementById("kpi-strip").innerHTML = `
+      <div class="kpi good">${GHOST_ICON}<div class="n tabular">${nOk}/9</div><div class="label">OK (&ge;97%)</div></div>
+      <div class="kpi warning">${GHOST_ICON}<div class="n tabular">${nAtencion}</div><div class="label">En atención (50-97%)</div></div>
+      <div class="kpi critical">${GHOST_ICON}<div class="n tabular">${nAlerta}</div><div class="label">Alerta (&lt;50%)</div></div>
+      <div class="kpi muted">${GHOST_ICON}<div class="n tabular">${nSilenciado}</div><div class="label">Silenciados</div></div>
+    `;
+
+    document.getElementById("project-grid").innerHTML = ordenado.map(l => {
+      const estado = estadoDe(l);
+      const hist = HISTORIAL[l.db] || [{ t: l.checked_at, pct: l.pct }];
+      const sparkOrNote = sparkBlock(hist);
+      return `
+        <article class="card state-${estado}">
+          ${GHOST_ICON}
+          <div class="card-top">
+            <div>
+              <div class="proj-name">${l.proyecto}</div>
+              <div class="db-name mono">${l.db}</div>
+            </div>
+            ${chipHTML(estado, "tile")}
+          </div>
+          <div class="pct-row">
+            <span class="pct mono tabular">${l.pct.toFixed(1)}%</span>
+            <span class="pct-frac tabular">${l.reportaron}/${l.total}</span>
+          </div>
+          ${sparkOrNote}
+          ${l.nota ? `<div class="card-note">${l.nota}</div>` : ""}
+          <div class="card-footer">medido ${fmtFecha(l.checked_at)}</div>
+        </article>
+      `;
+    }).join("");
+
+    document.getElementById("table-body").innerHTML = ordenado.map(l => {
+      const estado = estadoDe(l);
+      return `
+        <tr>
+          <td>${l.proyecto}</td>
+          <td class="mono">${l.db}</td>
+          <td class="num tabular">${l.total}</td>
+          <td class="num tabular">${l.reportaron}</td>
+          <td class="num tabular mono">${l.pct.toFixed(1)}%</td>
+          <td>${chipHTML(estado, "surface")}</td>
+          <td class="tabular">${fmtFecha(l.checked_at)}</td>
+        </tr>
+      `;
+    }).join("");
+
+    const porProyecto = ordenado.map(l => ({ ...l, ceros: CEROS[l.db] || [] }));
+    const conMasCeros = [...porProyecto].sort((a, b) => b.ceros.length - a.ceros.length);
+
+    document.getElementById("zero-list").innerHTML = conMasCeros.map(l => {
+      const n = l.ceros.length;
+      const nombre = `<span class="zero-item-name">${l.proyecto} <span class="mono" style="color:var(--text-muted);font-weight:400;font-size:11px;">${l.db}</span></span>`;
+
+      if (n === 0) {
+        return `
+          <div class="zero-item">
+            <div class="zero-item-flat-summary">
+              ${nombre}
+              <span class="zero-item-right"><span class="zero-count-badge none">0</span></span>
+            </div>
+          </div>
+        `;
+      }
+      const filas = l.ceros.map(c => `
+        <tr>
+          <td>${c.ubicacion}</td>
+          <td class="mono">${c.serial}</td>
+          <td class="num tabular mono">${c.valor}</td>
+        </tr>
+      `).join("");
+      return `
+        <details class="zero-item expandible">
+          <summary>
+            ${nombre}
+            <span class="zero-item-right">
+              <span class="zero-count-badge some">${n} en 0</span>
+              <svg class="zero-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </summary>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th>Ubicación</th><th>S/N Medidor</th><th class="num">Valor</th></tr>
+              </thead>
+              <tbody>${filas}</tbody>
+            </table>
+          </div>
+        </details>
+      `;
+    }).join("");
+  }
+
+  render();
+</script>
+</body>
+</html>
