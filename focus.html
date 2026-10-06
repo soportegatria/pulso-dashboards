@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="refresh" content="1800">
+<title>Pulso Focus</title>
+<meta name="description" content="Salud de recepción de datasources Focus — Enel Solar, Greendipity y Chec">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --brand-fixed:    #0e7d8a;
+    --brand-deep:     #075e68;
+    --good:           #008645;
+    --warning:        #e6a800;
+    --critical:       #e60000;
+    --muted-tile:     #4b5560;
+
+    --bg-page:      #eef4f4;
+    --surface:      #ffffff;
+    --surface-2:    #e7f1f1;
+    --text-primary: #0a1414;
+    --text-secondary: #4a5c5c;
+    --text-muted:   #79908f;
+    --border:       rgba(10,20,20,0.10);
+    --border-strong:rgba(10,20,20,0.18);
+    --brand:        var(--brand-fixed);
+    --accent:       #0e7d8a;
+    --accent-wash:  #e2f2f3;
+    --good-wash:    #e1f5ea;
+    --good-ink:     #008645;
+    --warning-wash: #fdf1d6;
+    --warning-ink:  #8a6300;
+    --critical-wash:#fbe4e4;
+    --critical-ink: #c62828;
+    --muted-chip:   #e7eae9;
+    --muted-chip-ink: #5c6b6a;
+    --shadow: 0 1px 2px rgba(10,20,20,0.05), 0 8px 24px -12px rgba(10,20,20,0.14);
+    --tile-shadow: 0 2px 4px rgba(10,20,20,0.07), 0 10px 26px -12px rgba(10,20,20,0.24);
+  }
+  /* Un solo tema (claro), a proposito -- consistente con el dashboard hermano
+     Pulso BWS, que tampoco tiene modo oscuro. */
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  header.top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+  .brand-row { display: flex; align-items: center; gap: 14px; }
+  .brand-logo-wrap {
+    background: #ffffff; border-radius: 8px; padding: 6px 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow); border: 1px solid var(--border); flex: none;
+  }
+  .brand-logo { height: 30px; width: auto; display: block; }
+  .brand-eyebrow {
+    font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--brand); font-weight: 600; margin: 0 0 6px;
+  }
+  h1 { font-size: 28px; font-weight: 700; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+  .meta-right { text-align: right; font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+  .meta-right b { color: var(--text-primary); font-weight: 600; }
+
+  .hero-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 20px; margin-bottom: 24px;
+  }
+  .hero-main { display: flex; flex-direction: column; gap: 6px; min-width: 240px; }
+  .hero-value-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .hero-value { font-family: "IBM Plex Mono", monospace; font-size: 48px; font-weight: 600; line-height: 1; }
+  .hero-sub { font-size: 13px; color: var(--text-secondary); }
+  .hero-meter-wrap { flex: 1; min-width: 220px; max-width: 420px; display: flex; flex-direction: column; gap: 6px; }
+  .hero-meter-track {
+    height: 10px; border-radius: 999px; overflow: hidden; background: var(--surface-2);
+    display: flex;
+  }
+  .hero-meter-caption { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
+
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 220px));
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+  .kpi {
+    position: relative; overflow: hidden; border-radius: 8px; padding: 10px 14px;
+    box-shadow: var(--tile-shadow); color: #ffffff;
+    display: flex; align-items: baseline; gap: 8px;
+    --tile-ink: #ffffff; --tile-ink-soft: rgba(255,255,255,0.85); --tile-ghost: rgba(255,255,255,0.18);
+  }
+  .kpi .n { font-size: 20px; font-weight: 600; line-height: 1; font-family: "IBM Plex Mono", monospace; color: var(--tile-ink); }
+  .kpi .label { font-size: 11.5px; color: var(--tile-ink-soft); }
+  .kpi.good { background: var(--good); }
+  .kpi.warning { background: var(--warning); --tile-ink:#241c00; --tile-ink-soft: rgba(36,28,0,0.75); --tile-ghost: rgba(0,0,0,0.14); }
+  .kpi.critical { background: var(--critical); }
+  .kpi.muted { background: var(--muted-tile); }
+  .kpi.brand { background: var(--brand-fixed); }
+  .kpi .ghost-icon { position: absolute; right: -8px; bottom: -8px; width: 40px; height: 40px; color: var(--tile-ghost); pointer-events: none; }
+
+  section.cliente-group { margin-bottom: 34px; }
+  .cliente-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; margin-bottom: 14px;
+  }
+  .cliente-head h2 {
+    font-size: 17px; font-weight: 700; margin: 0;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .cliente-count { font-size: 12.5px; color: var(--text-muted); font-weight: 500; }
+
+  section h2.section-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--text-muted); font-weight: 600; margin: 0 0 14px;
+  }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+
+  .card {
+    --tile-ink: #ffffff; --tile-ink-soft: rgba(255,255,255,0.8); --tile-ink-softer: rgba(255,255,255,0.7);
+    --tile-chip-bg: rgba(255,255,255,0.22); --tile-chip-border: rgba(255,255,255,0.4);
+    --tile-ghost: rgba(255,255,255,0.16);
+    border-radius: 12px; padding: 18px 18px 16px; box-shadow: var(--tile-shadow);
+    display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden; color: var(--tile-ink);
+  }
+  .card.state-good { background: var(--good); }
+  .card.state-critical { background: var(--critical); }
+  .card.state-muted { background: var(--muted-tile); }
+  .card.state-warning {
+    background: var(--warning);
+    --tile-ink: #241c00; --tile-ink-soft: rgba(36,28,0,0.75); --tile-ink-softer: rgba(36,28,0,0.65);
+    --tile-chip-bg: rgba(0,0,0,0.12); --tile-chip-border: rgba(0,0,0,0.28); --tile-ghost: rgba(0,0,0,0.14);
+  }
+  .card-note {
+    font-size: 12px; color: var(--tile-ink); background: rgba(0,0,0,0.16);
+    border: 1px solid rgba(255,255,255,0.16); border-radius: 8px; padding: 8px 10px; line-height: 1.45;
+    position: relative; z-index: 1;
+  }
+  .card .ghost-icon { position: absolute; right: -14px; bottom: -14px; width: 92px; height: 92px; color: var(--tile-ghost); pointer-events: none; }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; position: relative; z-index: 1; }
+  .proj-name { font-size: 15.5px; font-weight: 700; line-height: 1.25; }
+  .proj-sub { font-size: 11px; color: var(--tile-ink-softer); margin-top: 2px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.02em; padding: 3px 9px; border-radius: 999px; white-space: nowrap; position: relative; z-index: 1;
+  }
+  .chip svg { width: 8px; height: 8px; flex: none; }
+  .chip.on-tile { background: var(--tile-chip-bg); border: 1px solid var(--tile-chip-border); color: var(--tile-ink); }
+  .chip.on-surface.good { background: var(--good-wash); color: var(--good-ink); }
+  .chip.on-surface.warning { background: var(--warning-wash); color: var(--warning-ink); }
+  .chip.on-surface.critical { background: var(--critical-wash); color: var(--critical-ink); }
+  .chip.on-surface.muted-c { background: var(--muted-chip); color: var(--muted-chip-ink); }
+
+  .duracion-row { display: flex; align-items: baseline; gap: 10px; position: relative; z-index: 1; }
+  .duracion { font-size: 30px; font-weight: 600; line-height: 1; }
+  .duracion-label { font-size: 11.5px; color: var(--tile-ink-soft); }
+  .card-footer { font-size: 11px; color: var(--tile-ink-softer); margin-top: auto; padding-top: 4px; position: relative; z-index: 1; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; background: var(--surface-2); }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface-2); }
+  td.num { text-align: right; }
+
+  .section-hint { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0 0 14px; max-width: 68ch; }
+
+  details.silenciados-panel {
+    border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
+    margin-bottom: 34px; overflow: hidden;
+  }
+  details.silenciados-panel summary {
+    cursor: pointer; padding: 14px 18px; font-size: 14px; font-weight: 600;
+    color: var(--text-secondary); list-style: none;
+    display: flex; align-items: center; gap: 8px;
+  }
+  details.silenciados-panel summary::-webkit-details-marker { display: none; }
+  details.silenciados-panel summary::before {
+    content: "→"; display: inline-block; transition: transform 0.15s ease; color: var(--text-muted);
+  }
+  details.silenciados-panel[open] summary::before { transform: rotate(90deg); }
+  details.silenciados-panel .table-scroll { border: none; border-top: 1px solid var(--border); border-radius: 0; }
+  details.silenciados-panel table th { background: var(--surface-2); }
+
+  details.methodology {
+    margin-top: 28px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); padding: 4px 18px;
+  }
+  details.methodology summary {
+    cursor: pointer; padding: 12px 0; font-size: 13px; font-weight: 600; color: var(--text-secondary); list-style: none;
+  }
+  details.methodology summary::-webkit-details-marker { display: none; }
+  details.methodology summary::before {
+    content: "→"; display: inline-block; margin-right: 8px; transition: transform 0.15s ease; color: var(--accent);
+  }
+  details.methodology[open] summary::before { transform: rotate(90deg); }
+  details.methodology p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+  details.methodology ul { font-size: 13px; color: var(--text-secondary); line-height: 1.7; padding-left: 20px; margin: 8px 0; }
+  details.methodology code { font-family: "IBM Plex Mono", monospace; font-size: 12px; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+
+  footer.page-footer {
+    margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand-row">
+      <span class="brand-logo-wrap">
+        <img class="brand-logo" alt="Focus IoT Platform" src="data:image/png;base64,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">
+      </span>
+      <div>
+        <p class="brand-eyebrow">Gatria &middot; Focus IoT Platform</p>
+        <h1>Pulso Focus</h1>
+      </div>
+    </div>
+    <div class="meta-right">
+      Última lectura: <b id="meta-last-check">—</b><br>
+      Actualización manual — pídele a Claude &ldquo;actualiza el dashboard de Focus&rdquo;
+    </div>
+  </header>
+
+  <section>
+    <h2 class="section-title">Recepción global de telemedida</h2>
+    <div class="hero-card" id="hero-global"></div>
+  </section>
+
+  <div class="kpis" id="kpi-strip"></div>
+
+  <div id="grupos-clientes"></div>
+
+  <details class="silenciados-panel" id="panel-silenciados"></details>
+
+  <section>
+    <h2 class="section-title">Detalle completo</h2>
+    <p class="section-hint">Solo datasources activos (no silenciados) — el detalle de los silenciados está en el desplegable de arriba.</p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Datasource</th>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th class="num">Canales</th>
+            <th>Última lectura</th>
+            <th class="num">Hace</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <details class="methodology">
+    <summary>Cómo se calcula la salud de recepción</summary>
+    <p>
+      A diferencia de Pulso BWS (que calcula un % de medidores reportando por día), Focus expone
+      directamente <code>datasources.last_date_reported</code>: la fecha/hora de la última lectura
+      recibida por cada <b>Datasource ID</b>. Bajo operación normal, cada datasource reporta cada
+      <b>~30 minutos</b> (confirmado contando timestamps en las tablas diarias <code>data_YYYY_MM_DD</code>),
+      así que un atraso se nota rápido.
+    </p>
+    <p><b>Franjas de estado</b> (por tiempo desde la última lectura, no por %):</p>
+    <ul>
+      <li><b>OK</b> — hace 2 horas o menos.</li>
+      <li><b>Atención</b> — entre 2 y 24 horas.</li>
+      <li><b>Alerta</b> — más de 24 horas (puede ser días, meses o años).</li>
+    </ul>
+    <p>
+      <b>Cuidado con la zona horaria:</b> <code>last_date_reported</code> y las tablas
+      <code>data_YYYY_MM_DD</code> se guardan en hora local Bogotá sin zona horaria explícita, pero
+      <code>now()</code> de Postgres devuelve UTC — restarlos directo da un desfase falso de ~5 horas.
+      El "hace" de esta página se calculó contra la hora local del bastion (que ya está en
+      <code>America/Bogota</code>), no contra <code>now()</code> de la base.
+    </p>
+    <p>
+      Los 30 datasources pertenecen a 3 clientes en <code>focus_enel</code>: <b>Enel Solar</b> (24),
+      <b>Greendipity</b> (5) y <b>Chec</b> (1). Solo 2 (Eternit y Club Lagartos) están marcados como
+      <code>tipo_cliente = 'Solar'</code> en la tabla <code>meters</code> — el resto son medidores de
+      consumo eléctrico industrial/residencial monitoreados por Focus para estos mismos clientes.
+    </p>
+    <p>
+      <b>Silenciados:</b> datasources retirados o con un problema de configuración conocido (dashboard
+      duplicado, conexión incorrecta) que ya no representan una alerta real — se confirmaron uno por
+      uno con el equipo de soporte el 2026-09-21. No cuentan para el % global ni aparecen en las
+      tarjetas por cliente; su detalle está en el desplegable "Datasources silenciados".
+    </p>
+  </details>
+
+  <footer class="page-footer">
+    <span>30 datasources en focus_enel (24 activos + 6 silenciados) · datos de solo lectura desde RDS de producción</span>
+    <span id="meta-generated"></span>
+  </footer>
+
+</div>
+
+<script>
+  // ===DATA_START===
+  const GENERATED_AT = "2026-10-06T10:52:27";
+
+  const DATASOURCES = [
+    { id: 16040057, alias: "16040057", tags: "Chec", cliente: "Chec", canales: 36, last: "2026-10-06T10:34:00", horas: 0.31 },
+    { id: 111019, alias: "Carvajal_Principal_111019", tags: "Carvajal Ginebra", cliente: "Enel Solar", canales: 36, last: "2026-10-04T16:28:00", horas: 42.41 },
+    { id: 111020, alias: "Carvajal_Respaldo_111020", tags: "Carvajal Ginebra", cliente: "Enel Solar", canales: 36, last: "2026-10-04T16:31:00", horas: 42.36 },
+    { id: 110980, alias: "Cementos_Tequendama_respaldo_110980", tags: "Cementos Tequendama", cliente: "Enel Solar", canales: 36, last: "2026-10-06T10:31:00", horas: 0.36 },
+    { id: 111032, alias: "Cementos_Tequendama_Respaldo_111032", tags: "Cementos Tequendama", cliente: "Enel Solar", canales: 36, last: "2025-07-24T22:02:00", horas: 10524.84, silenciado: true, motivo: "Datasource retirado." },
+    { id: 111033, alias: "Cementos_Tequendama_Principal_111033", tags: "Cementos Tequendama", cliente: "Enel Solar", canales: 36, last: "2026-10-06T10:31:00", horas: 0.36 },
+    { id: 81172, alias: "Central_cervecera_principal", tags: "Central Cervecera", cliente: "Enel Solar", canales: 25, last: "2025-06-20T23:45:00", horas: 11339.12, silenciado: true, motivo: "Datasource de medidor Elster, retirado." },
+    { id: 581172, alias: "Central_cervecera_Principal_581172", tags: "Central Cervecera", cliente: "Enel Solar", canales: 36, last: "2026-09-02T12:23:00", horas: 814.49, silenciado: true, motivo: "Dashboard de medidor Metcom con conexión incorrecta." },
+    { id: 681172, alias: "Centrla_Cervecera_ R_3600-681172", tags: "Central Cervecera", cliente: "Enel Solar", canales: 24, last: "2026-10-06T10:35:00", horas: 0.29 },
+    { id: 80157, alias: "Central_cervecera_respaldo", tags: "Central Cervecera Respaldo", cliente: "Enel Solar", canales: 25, last: "2026-07-26T02:36:00", horas: 1736.27, nota: "Activo y en falla — problema real, en investigación." },
+    { id: 80499, alias: "Club Lagartos", tags: "Club Lagartos (sitio Solar)", cliente: "Enel Solar", canales: 25, last: "2026-06-01T07:55:00", horas: 3050.96, silenciado: true, motivo: "Dashboard antiguo del medidor Elster A1800 — reemplazado por el datasource Metcom activo (180499)." },
+    { id: 180499, alias: "Club Lagartos Metcom -180499", tags: "Club Lagartos", cliente: "Enel Solar", canales: 36, last: "2026-10-06T10:25:00", horas: 0.46 },
+    { id: 70158, alias: "Coordinadora Mercantil Cota 070158", tags: "Coordinadora Mercantil cota", cliente: "Enel Solar", canales: 36, last: "2026-10-06T10:48:00", horas: 0.07 },
+    { id: 70183, alias: "Corona Madrid Principal 070183", tags: "Corona Madrid", cliente: "Enel Solar", canales: 36, last: "2026-10-06T10:32:00", horas: 0.34 },
+    { id: 70185, alias: "Corona Madrid Respaldo 070185", tags: "Corona Madrid", cliente: "Enel Solar", canales: 36, last: "2026-10-06T10:31:00", horas: 0.36 },
+    { id: 11279, alias: "Corona_Principal", tags: "Corona Sopo", cliente: "Enel Solar", canales: 36, last: "2026-10-06T10:32:00", horas: 0.34 },
+    { id: 11280, alias: "Corona_Respaldo", tags: "Corona Sopo", cliente: "Enel Solar", canales: 25, last: "2026-10-06T10:44:00", horas: 0.14 },
+    { id: 80191, alias: "Eternit", tags: "Eternit (sitio Solar)", cliente: "Enel Solar", canales: 36, last: "2026-10-06T10:31:00", horas: 0.36 },
+    { id: 70184, alias: "Hitachi 070184", tags: "HITACHI", cliente: "Enel Solar", canales: 36, last: "2026-08-10T07:32:00", horas: 1371.34, nota: "Activo y en falla — problema real, en investigación." },
+    { id: 11277, alias: "Postobon_principal", tags: "Postobon", cliente: "Enel Solar", canales: 36, last: "2026-10-05T07:32:00", horas: 27.34 },
+    { id: 11278, alias: "Postobon_respaldo", tags: "Postobon", cliente: "Enel Solar", canales: 36, last: "2026-10-05T08:02:00", horas: 26.84 },
+    { id: 10320, alias: "Postobon Malambo principal Aguas_010320", tags: "Postobon Malambo", cliente: "Enel Solar", canales: 36, last: "2026-10-06T10:32:00", horas: 0.34 },
+    { id: 11383, alias: "Postobon Malambo respaldo Aguas_011383", tags: "Postobon Malambo", cliente: "Enel Solar", canales: 36, last: "2026-10-06T10:31:00", horas: 0.36 },
+    { id: 11426, alias: "Postobon Malambo respaldo Gaseosas_011426", tags: "Postobon Malambo", cliente: "Enel Solar", canales: 36, last: "2026-02-05T12:31:00", horas: 5830.36, silenciado: true, motivo: "Datasource retirado." },
+    { id: 401045, alias: "Postobon Malambo principal Gaseosas_401045", tags: "Postobon Malambo", cliente: "Enel Solar", canales: 36, last: "2026-02-05T12:31:00", horas: 5830.36, silenciado: true, motivo: "Datasource retirado." },
+    { id: 40016, alias: "U. San Buenaventura 040016", tags: "Greendipity", cliente: "Greendipity", canales: 36, last: "2026-10-06T10:31:00", horas: 0.36 },
+    { id: 50087, alias: "Grupo GZ 050087", tags: "Greendipity", cliente: "Greendipity", canales: 24, last: "2026-10-06T10:26:00", horas: 0.44 },
+    { id: 70121, alias: "San buenaventura", tags: "Greendipity", cliente: "Greendipity", canales: 36, last: "2026-10-06T10:44:00", horas: 0.14 },
+    { id: 70122, alias: "Comfenalco", tags: "Greendipity", cliente: "Greendipity", canales: 36, last: "2026-10-06T10:32:00", horas: 0.34 },
+    { id: 110982, alias: "INORCA SAS", tags: "Greendipity", cliente: "Greendipity", canales: 36, last: "2026-10-06T10:32:00", horas: 0.34 },
+  ];
+// ===DATA_END===
+
+  const CLIENTES_ORDEN = ["Enel Solar", "Greendipity", "Chec"];
+
+  function estadoPorHoras(h) {
+    if (h <= 2) return "good";
+    if (h <= 24) return "warning";
+    return "critical";
+  }
+
+  function estadoDe(d) {
+    if (d.silenciado) return "muted";
+    return estadoPorHoras(d.horas);
+  }
+
+  const ETIQUETA = { good: "OK", warning: "Atención", critical: "Alerta", muted: "Silenciado" };
+
+  function chipHTML(estado, variante) {
+    const label = ETIQUETA[estado];
+    const clase = variante === "surface" ? `on-surface ${estado === "muted" ? "muted-c" : estado}` : "on-tile";
+    return `<span class="chip ${clase}"><svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="currentColor"/></svg>${label}</span>`;
+  }
+
+  const GHOST_ICON = `<svg class="ghost-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <circle cx="12" cy="12" r="2" fill="currentColor"/>
+    <circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="1.4"/>
+    <circle cx="12" cy="12" r="11" stroke="currentColor" stroke-width="1"/>
+  </svg>`;
+
+  function fmtFecha(iso) {
+    const d = new Date(iso);
+    return d.toLocaleString("es-CO", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  // Formatea "hace cuanto" en la unidad mas legible: minutos, horas, dias, meses o anios.
+  function fmtDuracion(horas) {
+    if (horas < 1) return `${Math.round(horas * 60)} min`;
+    if (horas < 48) return `${horas.toFixed(1)} h`;
+    const dias = horas / 24;
+    if (dias < 60) return `${Math.round(dias)} d`;
+    const meses = dias / 30.44;
+    if (meses < 24) return `${meses.toFixed(1)} meses`;
+    return `${(dias / 365.25).toFixed(1)} años`;
+  }
+
+  function render() {
+    document.getElementById("meta-last-check").textContent = fmtFecha(GENERATED_AT);
+    document.getElementById("meta-generated").textContent = "generado " + fmtFecha(GENERATED_AT);
+
+    const activos = DATASOURCES.filter(d => !d.silenciado);
+    const silenciados = DATASOURCES.filter(d => d.silenciado);
+
+    const nOk = activos.filter(d => estadoPorHoras(d.horas) === "good").length;
+    const nAtencion = activos.filter(d => estadoPorHoras(d.horas) === "warning").length;
+    const nAlerta = activos.filter(d => estadoPorHoras(d.horas) === "critical").length;
+    const total = activos.length;
+    const pctOk = total ? (nOk / total) * 100 : 0;
+
+    // Umbral distinto al de Pulso BWS a propósito: acá son 24 datasources activos,
+    // no miles de medidores, así que cada uno pesa ~4 puntos porcentuales -- un 97%
+    // (el umbral de BWS) nunca se alcanzaría con 2 datasources fallando de verdad.
+    const estadoGlobal = pctOk >= 90 ? "good" : pctOk >= 70 ? "warning" : "critical";
+    document.getElementById("hero-global").innerHTML = `
+      <div class="hero-main">
+        <div class="hero-value-row">
+          <span class="hero-value tabular" style="color:var(--${estadoGlobal}-ink)">${pctOk.toFixed(1)}%</span>
+          ${chipHTML(estadoGlobal, "surface")}
+        </div>
+        <div class="hero-sub">${nOk}/${total} datasources activos reportando con normalidad (≤2 h) &middot; ${silenciados.length} silenciados aparte, no cuentan aquí</div>
+      </div>
+      <div class="hero-meter-wrap">
+        <div class="hero-meter-track">
+          <div style="width:${pctOk.toFixed(1)}%; background:var(--good)"></div>
+          <div style="width:${(100 - pctOk).toFixed(1)}%; background:var(--critical)"></div>
+        </div>
+        <div class="hero-meter-caption"><span>0%</span><span>${pctOk.toFixed(0)}% OK</span><span>100%</span></div>
+      </div>
+    `;
+
+    document.getElementById("kpi-strip").innerHTML = `
+      <div class="kpi brand">${GHOST_ICON}<div class="n tabular">${total}</div><div class="label">Datasources activos</div></div>
+      <div class="kpi good">${GHOST_ICON}<div class="n tabular">${nOk}</div><div class="label">OK (&le;2h)</div></div>
+      <div class="kpi warning">${GHOST_ICON}<div class="n tabular">${nAtencion}</div><div class="label">Atención (2-24h)</div></div>
+      <div class="kpi critical">${GHOST_ICON}<div class="n tabular">${nAlerta}</div><div class="label">Alerta (&gt;24h)</div></div>
+      <div class="kpi muted">${GHOST_ICON}<div class="n tabular">${silenciados.length}</div><div class="label">Silenciados</div></div>
+    `;
+
+    // Secciones por cliente (solo activos), cada una ordenada peor-primero.
+    const porCliente = {};
+    activos.forEach(d => {
+      (porCliente[d.cliente] = porCliente[d.cliente] || []).push(d);
+    });
+
+    document.getElementById("grupos-clientes").innerHTML = CLIENTES_ORDEN
+      .filter(c => porCliente[c])
+      .map(cliente => {
+        const items = [...porCliente[cliente]].sort((a, b) => b.horas - a.horas);
+        const nProblemas = items.filter(d => estadoPorHoras(d.horas) !== "good").length;
+        const resumen = nProblemas > 0
+          ? `${items.length} activos &middot; ${nProblemas} con atraso`
+          : `${items.length} activos &middot; todos al día`;
+        const tarjetas = items.map(d => {
+          const estado = estadoPorHoras(d.horas);
+          const subt = d.tags && d.tags !== cliente ? d.tags : null;
+          return `
+            <article class="card state-${estado}">
+              ${GHOST_ICON}
+              <div class="card-top">
+                <div>
+                  <div class="proj-name">${d.alias}</div>
+                  ${subt ? `<div class="proj-sub">${subt}</div>` : ""}
+                </div>
+                ${chipHTML(estado, "tile")}
+              </div>
+              <div class="duracion-row">
+                <span class="duracion mono tabular">${fmtDuracion(d.horas)}</span>
+                <span class="duracion-label">desde el último reporte</span>
+              </div>
+              ${d.nota ? `<div class="card-note">${d.nota}</div>` : ""}
+              <div class="card-footer mono">ID ${d.id} &middot; última: ${fmtFecha(d.last)}</div>
+            </article>
+          `;
+        }).join("");
+        return `
+          <section class="cliente-group">
+            <div class="cliente-head">
+              <h2>${cliente}</h2>
+              <span class="cliente-count">${resumen}</span>
+            </div>
+            <div class="grid">${tarjetas}</div>
+          </section>
+        `;
+      }).join("");
+
+    const ordenadoTabla = [...activos].sort((a, b) => b.horas - a.horas);
+    document.getElementById("table-body").innerHTML = ordenadoTabla.map(d => {
+      const estado = estadoPorHoras(d.horas);
+      return `
+        <tr>
+          <td>${d.alias}</td>
+          <td class="mono">${d.id}</td>
+          <td>${d.cliente}</td>
+          <td class="num tabular">${d.canales}</td>
+          <td class="tabular">${fmtFecha(d.last)}</td>
+          <td class="num tabular">${fmtDuracion(d.horas)}</td>
+          <td>${chipHTML(estado, "surface")}</td>
+        </tr>
+      `;
+    }).join("");
+
+    const panel = document.getElementById("panel-silenciados");
+    const filasSilenciados = [...silenciados].sort((a, b) => a.cliente.localeCompare(b.cliente)).map(d => `
+      <tr>
+        <td>${d.alias}</td>
+        <td class="mono">${d.id}</td>
+        <td>${d.cliente}</td>
+        <td class="tabular">${fmtFecha(d.last)}</td>
+        <td class="num tabular">${fmtDuracion(d.horas)}</td>
+        <td>${d.motivo || ""}</td>
+      </tr>
+    `).join("");
+    panel.innerHTML = `
+      <summary>Datasources silenciados (${silenciados.length}) — retirados o mal configurados, no afectan el estado global</summary>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Datasource</th><th>ID</th><th>Cliente</th><th>Última lectura</th><th class="num">Hace</th><th>Motivo</th></tr>
+          </thead>
+          <tbody>${filasSilenciados}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  render();
+</script>
+</body>
+</html>
