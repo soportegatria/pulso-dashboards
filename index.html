@@ -648,9 +648,9 @@
     "db": "electricaribe_2001",
     "proyecto": "Spiaggia",
     "total": 139,
-    "reportaron": 139,
-    "pct": 100.0,
-    "checked_at": "2026-11-03T06:15:01",
+    "reportaron": 138,
+    "pct": 99.3,
+    "checked_at": "2026-11-04T06:15:01",
     "silenciado": false
   },
   {
@@ -659,25 +659,25 @@
     "total": 243,
     "reportaron": 243,
     "pct": 100.0,
-    "checked_at": "2026-11-03T06:15:01",
+    "checked_at": "2026-11-04T06:15:01",
     "silenciado": false
   },
   {
     "db": "electricaribe_2003",
     "proyecto": "Sagitario",
     "total": 169,
-    "reportaron": 168,
-    "pct": 99.4,
-    "checked_at": "2026-11-03T06:15:01",
+    "reportaron": 169,
+    "pct": 100.0,
+    "checked_at": "2026-11-04T06:15:01",
     "silenciado": false
   },
   {
     "db": "electricaribe_2004",
     "proyecto": "Newport II",
     "total": 180,
-    "reportaron": 11,
-    "pct": 6.1,
-    "checked_at": "2026-11-03T06:15:01",
+    "reportaron": 8,
+    "pct": 4.4,
+    "checked_at": "2026-11-04T06:15:01",
     "silenciado": true,
     "nota": "Caída sin resolver desde 2025-08-28. Último día completo: 2025-08-14 (76.1%). En análisis."
   },
@@ -687,25 +687,25 @@
     "total": 50,
     "reportaron": 50,
     "pct": 100.0,
-    "checked_at": "2026-11-03T06:15:01",
+    "checked_at": "2026-11-04T06:15:01",
     "silenciado": false
   },
   {
     "db": "electricaribe_2006",
     "proyecto": "Dominique",
     "total": 123,
-    "reportaron": 89,
-    "pct": 72.4,
-    "checked_at": "2026-11-03T06:15:01",
+    "reportaron": 84,
+    "pct": 68.3,
+    "checked_at": "2026-11-04T06:15:01",
     "silenciado": false
   },
   {
     "db": "electricaribe_2007",
     "proyecto": "Newport III",
     "total": 242,
-    "reportaron": 205,
-    "pct": 84.7,
-    "checked_at": "2026-11-03T06:15:01",
+    "reportaron": 168,
+    "pct": 69.4,
+    "checked_at": "2026-11-04T06:15:01",
     "silenciado": false
   },
   {
@@ -714,7 +714,7 @@
     "total": 79,
     "reportaron": 79,
     "pct": 100.0,
-    "checked_at": "2026-11-03T06:15:01",
+    "checked_at": "2026-11-04T06:15:01",
     "silenciado": false
   },
   {
@@ -723,7 +723,7 @@
     "total": 117,
     "reportaron": 114,
     "pct": 97.4,
-    "checked_at": "2026-11-03T06:15:01",
+    "checked_at": "2026-11-04T06:15:01",
     "silenciado": false
   }
 ];
@@ -763,6 +763,11 @@
       "valor": 0.0
     },
     {
+      "ubicacion": "Macro_Planta",
+      "serial": "10007135",
+      "valor": 0.0
+    },
+    {
       "ubicacion": "Zonas_Comunes",
       "serial": "10007133",
       "valor": 0.0
@@ -798,14 +803,14 @@
       "ubicacion": "Apto_410",
       "serial": "21111007",
       "valor": 0.0
-    },
-    {
-      "ubicacion": "Apto_707",
-      "serial": "22111530",
-      "valor": 0.0
     }
   ],
   "electricaribe_2007": [
+    {
+      "ubicacion": "Apto 2722",
+      "serial": "24078166",
+      "valor": 0.0
+    },
     {
       "ubicacion": "MACRO-TORRE III",
       "serial": "21010030",
@@ -829,9 +834,25 @@
 };
 
   const UMBRAL = 90.0;
-  const GENERATED_AT = "2026-11-03T06:15:02";
+  const GENERATED_AT = "2026-11-04T06:15:02";
 
   const EVENTOS = [
+  {
+    "proyecto": "Newport III",
+    "db": "electricaribe_2007",
+    "inicio": "2026-11-04",
+    "fin": "2026-11-04",
+    "minPct": 69.4,
+    "resumen": "Pasó de verde a amarillo (69.4%) el 2026-11-04 (detectado automáticamente)."
+  },
+  {
+    "proyecto": "Newport III",
+    "db": "electricaribe_2007",
+    "inicio": "2026-11-03",
+    "fin": "2026-11-03",
+    "minPct": 100.0,
+    "resumen": "Pasó de amarillo a verde (100.0%) el 2026-11-03 (detectado automáticamente)."
+  },
   {
     "proyecto": "Newport III",
     "db": "electricaribe_2007",
@@ -1119,48 +1140,12 @@
     "fin": "2026-10-21",
     "minPct": 53.7,
     "resumen": "Pasó de rojo a amarillo (53.7%) el 2026-10-21 (detectado automáticamente)."
-  },
-  {
-    "proyecto": "Dominique",
-    "db": "electricaribe_2006",
-    "inicio": "2026-10-21",
-    "fin": "2026-10-21",
-    "minPct": 48.8,
-    "resumen": "Pasó de amarillo a rojo (48.8%) el 2026-10-21 (detectado automáticamente)."
-  },
-  {
-    "proyecto": "Newport III",
-    "db": "electricaribe_2007",
-    "inicio": "2026-10-21",
-    "fin": "2026-10-21",
-    "minPct": 93.0,
-    "resumen": "Pasó de verde a amarillo (93.0%) el 2026-10-21 (detectado automáticamente)."
-  },
-  {
-    "proyecto": "Newport III",
-    "db": "electricaribe_2007",
-    "inicio": "2026-10-20",
-    "fin": "2026-10-20",
-    "minPct": 99.6,
-    "resumen": "Pasó de amarillo a verde (99.6%) el 2026-10-20 (detectado automáticamente)."
-  },
-  {
-    "proyecto": "Laguna del Cabrero",
-    "db": "electricaribe_2009",
-    "inicio": "2026-10-20",
-    "fin": "2026-10-20",
-    "minPct": 97.4,
-    "resumen": "Pasó de amarillo a verde (97.4%) el 2026-10-20 (detectado automáticamente)."
   }
 ];
 
   const HISTORIAL = {
   "electricaribe_2001": [
     {
-      "t": "2026-10-05T23:50:01",
-      "pct": 100.0
-    },
-    {
       "t": "2026-10-06T23:50:01",
       "pct": 100.0
     },
@@ -1273,16 +1258,16 @@
       "pct": 100.0
     },
     {
-      "t": "2026-11-03T06:15:01",
+      "t": "2026-11-03T23:50:01",
       "pct": 100.0
+    },
+    {
+      "t": "2026-11-04T06:15:01",
+      "pct": 99.3
     }
   ],
   "electricaribe_2002": [
     {
-      "t": "2026-10-05T23:50:01",
-      "pct": 100.0
-    },
-    {
       "t": "2026-10-06T23:50:01",
       "pct": 100.0
     },
@@ -1395,16 +1380,16 @@
       "pct": 100.0
     },
     {
-      "t": "2026-11-03T06:15:01",
+      "t": "2026-11-03T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-11-04T06:15:01",
       "pct": 100.0
     }
   ],
   "electricaribe_2003": [
     {
-      "t": "2026-10-05T23:50:01",
-      "pct": 100.0
-    },
-    {
       "t": "2026-10-06T23:50:01",
       "pct": 100.0
     },
@@ -1517,15 +1502,15 @@
       "pct": 100.0
     },
     {
-      "t": "2026-11-03T06:15:01",
-      "pct": 99.4
+      "t": "2026-11-03T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-11-04T06:15:01",
+      "pct": 100.0
     }
   ],
   "electricaribe_2004": [
-    {
-      "t": "2026-10-05T23:50:01",
-      "pct": 8.3
-    },
     {
       "t": "2026-10-06T23:50:01",
       "pct": 14.4
@@ -1639,15 +1624,15 @@
       "pct": 14.4
     },
     {
-      "t": "2026-11-03T06:15:01",
-      "pct": 6.1
+      "t": "2026-11-03T23:50:01",
+      "pct": 10.0
+    },
+    {
+      "t": "2026-11-04T06:15:01",
+      "pct": 4.4
     }
   ],
   "electricaribe_2005": [
-    {
-      "t": "2026-10-05T23:50:01",
-      "pct": 100.0
-    },
     {
       "t": "2026-10-06T23:50:01",
       "pct": 100.0
@@ -1761,15 +1746,15 @@
       "pct": 100.0
     },
     {
-      "t": "2026-11-03T06:15:01",
+      "t": "2026-11-03T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-11-04T06:15:01",
       "pct": 100.0
     }
   ],
   "electricaribe_2006": [
-    {
-      "t": "2026-10-05T23:50:01",
-      "pct": 84.6
-    },
     {
       "t": "2026-10-06T23:50:01",
       "pct": 80.5
@@ -1883,15 +1868,15 @@
       "pct": 79.7
     },
     {
-      "t": "2026-11-03T06:15:01",
-      "pct": 72.4
+      "t": "2026-11-03T23:50:01",
+      "pct": 80.5
+    },
+    {
+      "t": "2026-11-04T06:15:01",
+      "pct": 68.3
     }
   ],
   "electricaribe_2007": [
-    {
-      "t": "2026-10-05T23:50:01",
-      "pct": 98.8
-    },
     {
       "t": "2026-10-06T23:50:01",
       "pct": 100.0
@@ -2005,15 +1990,15 @@
       "pct": 100.0
     },
     {
-      "t": "2026-11-03T06:15:01",
-      "pct": 84.7
+      "t": "2026-11-03T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-11-04T06:15:01",
+      "pct": 69.4
     }
   ],
   "electricaribe_2008": [
-    {
-      "t": "2026-10-05T23:50:01",
-      "pct": 100.0
-    },
     {
       "t": "2026-10-06T23:50:01",
       "pct": 100.0
@@ -2127,15 +2112,15 @@
       "pct": 100.0
     },
     {
-      "t": "2026-11-03T06:15:01",
+      "t": "2026-11-03T23:50:01",
+      "pct": 100.0
+    },
+    {
+      "t": "2026-11-04T06:15:01",
       "pct": 100.0
     }
   ],
   "electricaribe_2009": [
-    {
-      "t": "2026-10-05T23:50:01",
-      "pct": 92.3
-    },
     {
       "t": "2026-10-06T23:50:01",
       "pct": 92.3
@@ -2249,7 +2234,11 @@
       "pct": 97.4
     },
     {
-      "t": "2026-11-03T06:15:01",
+      "t": "2026-11-03T23:50:01",
+      "pct": 97.4
+    },
+    {
+      "t": "2026-11-04T06:15:01",
       "pct": 97.4
     }
   ]
